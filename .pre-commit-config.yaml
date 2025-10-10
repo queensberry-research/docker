@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/dycw/pre-commit-hooks
-    rev: 0.12.4
+    rev: 0.13.10
     hooks:
       - id: run-bump-my-version
         args: [--mode=bumpversion]
@@ -10,7 +10,7 @@ repos:
       - id: pretty-format-toml
         args: [--autofix, --trailing-commas]
   - repo: https://github.com/reteps/dockerfmt
-    rev: v0.3.7
+    rev: v0.3.8
     hooks:
       - id: dockerfmt
         args: [--newline, --write]
