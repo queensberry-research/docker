@@ -6,5 +6,3 @@
   - write:packages
   - delete:packages
 - Add this to your repository as `GH_PAT`
-
-`uv` + `sops`
