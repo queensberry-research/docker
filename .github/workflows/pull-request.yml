@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - master
+
 env:
   test_tag: ghcr.io/${{ github.repository }}:test
 
@@ -18,7 +19,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GH_GHCR_TOKEN }}
+          password: ${{ secrets.GH_PAT }}
       - uses: docker/build-push-action@v6
         with:
           load: true
