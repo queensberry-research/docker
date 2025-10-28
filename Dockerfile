@@ -64,7 +64,7 @@ RUN set -e; \
             exit 1; \
         fi; \
     done; \
-    if ; \
+    if ! age --help >/dev/null 2>&1; then \
         echo "ERROR: 'age --help' errored" >&2; \
         exit 1; \
     fi;
