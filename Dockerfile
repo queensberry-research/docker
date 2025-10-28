@@ -42,7 +42,7 @@ COPY --from=uv /usr/local/bin/uv /usr/local/bin/
 COPY --from=uv /usr/local/bin/uvx /usr/local/bin/
 
 # uv tools
-COPY --from=tools /root/.local/bin/bump-my-version /usr/local/bin/
+COPY --from=tools /usr/local/bin/bump-my-version /usr/local/bin/
 
 # test
 RUN set -e; \
