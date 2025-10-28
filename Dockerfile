@@ -63,5 +63,11 @@ RUN set -e; \
             echo "ERROR: '${bin}' not found on PATH" >&2; \
             exit 1; \
         fi; \
-    done;
+    done; \
+    if ; \
+        echo "ERROR: 'age --help' errored" >&2; \
+        exit 1; \
+    fi;
+
+
 CMD ["/bin/sh"]
