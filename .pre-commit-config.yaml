@@ -1,7 +1,7 @@
 repos:
   # fixers
   - repo: https://github.com/dycw/pre-commit-hooks
-    rev: 0.13.18
+    rev: 0.13.23
     hooks:
       - id: run-bump-my-version
         args: [--mode=bumpversion]
@@ -19,7 +19,7 @@ repos:
             reorder_keys=true,
           ]
   - repo: https://github.com/reteps/dockerfmt
-    rev: v0.3.8
+    rev: v0.3.9
     hooks:
       - id: dockerfmt
         args: [--newline, --write]

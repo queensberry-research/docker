@@ -31,6 +31,14 @@ FROM ghcr.io/astral-sh/uv:0.9-python3.13-bookworm-slim AS uv
 FROM uv AS tools
 RUN uv tool install bump-my-version
 
+# yq
+#  - docker hub | https://hub.docker.com/r/mikefarah/yq
+#  - ghcr       | https://github.com/mikefarah/yq/pkgs/container/yq
+#  - source     | https://github.com/mikefarah/yq/blob/7f72595a12fbc7bc2870804fd5e502a63a85bdbf/Dockerfile
+FROM mikefarah/yq:4 AS yq
+
+###############################################################################
+
 # final image
 FROM base
 
@@ -44,10 +52,13 @@ COPY --from=uv /usr/local/bin/uvx /usr/local/bin/
 # uv tools
 COPY --from=tools /usr/local/bin/bump-my-version /usr/local/bin/
 
+# yq
+COPY --from=yq /usr/bin/yq /usr/local/bin/
+
 # test
 RUN set -e; \
     echo 'checking binaries...'; \
-    for bin in age bump-my-version dig gcc ip ld make nslookup pg_config ping sops uv; do \
+    for bin in age bump-my-version dig gcc ip ld make nslookup pg_config ping sops uv yq; do \
         if ! command -v "${bin}" >/dev/null 2>&1; then \
             echo "ERROR: '${bin}' not found on PATH" >&2; \
             exit 1; \
