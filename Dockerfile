@@ -27,10 +27,6 @@ FROM ghcr.io/getsops/sops:v3.10.2 AS sops
 #  - source     | https://github.com/astral-sh/uv/blob/9be016f3f8fdc3ac7974ed82762aa3364f6e8f2b/.github/workflows/build-docker.yml
 FROM ghcr.io/astral-sh/uv:0.9-python3.13-bookworm-slim AS uv
 
-# uv tools
-FROM uv AS tools
-RUN uv tool install bump-my-version
-
 # yq
 #  - docker hub | https://hub.docker.com/r/mikefarah/yq
 #  - ghcr       | https://github.com/mikefarah/yq/pkgs/container/yq
@@ -49,20 +45,24 @@ COPY --from=sops /usr/local/bin/sops /usr/local/bin/
 COPY --from=uv /usr/local/bin/uv /usr/local/bin/
 COPY --from=uv /usr/local/bin/uvx /usr/local/bin/
 
-# uv tools
-COPY --from=tools /usr/local/bin/bump-my-version /usr/local/bin/
-
 # yq
 COPY --from=yq /usr/bin/yq /usr/local/bin/
 
 # test
 RUN set -e; \
-    echo 'checking binaries...'; \
-    for bin in age bump-my-version dig gcc ip ld make nslookup pg_config ping sops uv yq; do \
-        if ! command -v "${bin}" >/dev/null 2>&1; then \
-            echo "ERROR: '${bin}' not found on PATH" >&2; \
-            exit 1; \
+    echo 'Checking binaries...'; \
+    for bin in dig gcc ip ld make nslookup pg_config ping; do \
+        if ! command -v "$bin" >/dev/null 2>&1; then \
+            echo "ERROR: '$bin' not found on PATH" >&2; exit 1; \
         fi; \
-    done
+    done; \
+    for bin in age sops uv yq; do \
+        if ! "$bin" --help >/dev/null 2>&1; then \
+            echo "ERROR: '$bin --help' errored" >&2; exit 1; \
+        fi; \
+    done; \
+    echo 'Finished checking binaries'; \
+    sleep 2
+
 
 CMD ["/bin/sh"]
