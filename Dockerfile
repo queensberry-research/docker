@@ -58,16 +58,22 @@ COPY --from=yq /usr/bin/yq /usr/local/bin/
 # test
 RUN set -e; \
     echo 'Checking binaries...'; \
-    for bin in age bump-my-version dig gcc ip ld make nslookup pg_config ping sops uv yq; do \
+    for bin in dig gcc ip ld make nslookup pg_config ping sops uv yq; do \
         if ! command -v "${bin}" >/dev/null 2>&1; then \
-            echo "ERROR: '${bin}' not found on PATH" >&2; \
-            exit 1; \
+            echo "ERROR: '${bin}' not found on PATH" >&2; exit 1; \
         fi; \
     done; \
     if ! age --help >/dev/null 2>&1; then \
-        echo "ERROR: 'age --help' errored" >&2; \
-        exit 1; \
-    fi;
+        echo "ERROR: 'age --help' errored" >&2; exit 1; \
+    fi; \
+    if ! bump-my-version --help >/dev/null 2>&1; then \
+        echo "ERROR: 'bump-my-version --help' erored" >&2; exit 1; \
+    fi; \
+    if ! sops --help >/dev/null 2>&1; then \
+        echo "ERROR: 'sops --help' errored" >&2; exit 1; \
+    fi; \
+    echo 'Finished checking binaries'; \
+    sleep 2
 
 
 CMD ["/bin/sh"]
