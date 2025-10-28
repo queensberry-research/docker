@@ -57,12 +57,11 @@ COPY --from=yq /usr/bin/yq /usr/local/bin/
 
 # test
 RUN set -e; \
-    echo 'checking binaries...'; \
+    echo 'Checking binaries...'; \
     for bin in age bump-my-version dig gcc ip ld make nslookup pg_config ping sops uv yq; do \
         if ! command -v "${bin}" >/dev/null 2>&1; then \
             echo "ERROR: '${bin}' not found on PATH" >&2; \
             exit 1; \
         fi; \
-    done
-
+    done;
 CMD ["/bin/sh"]
