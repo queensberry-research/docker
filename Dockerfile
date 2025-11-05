@@ -1,68 +1,48 @@
-# base image
-FROM python:3.13-slim-bookworm AS base
+FROM debian:trixie-slim AS base
 
-# age
-RUN apt-get update \
+ENV PATH=/root/.local/bin:$PATH
+
+RUN echo '' \
+    # apt
+    && apt-get update \
+    # apt - age
     && apt-get install -y --no-install-recommends age \
-    && rm -rf /var/lib/apt/lists/*
+    # apt - git
+    && apt-get install -y --no-install-recommends git \
+    # apt - psycopg
+    && apt-get install -y --no-install-recommends build-essential libpq-dev \
+    # docker
+    && apt-get install -y --no-install-recommends ca-certificates curl \
+    && install -m 0755 -d /etc/apt/keyrings \
+    && curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc \
+    && chmod a+r /etc/apt/keyrings/docker.asc \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list >/dev/null \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin \
+    # apt
+    && rm -rf /var/lib/apt/lists/* \
+    && echo ''
 
-# network
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends dnsutils inetutils-traceroute iputils-ping iproute2 net-tools \
-    && rm -rf /var/lib/apt/lists/*
+COPY --from=ghcr.io/getsops/sops:v3.11.0 /usr/local/bin/sops /usr/local/bin/
+# https://github.com/getsops/sops/pkgs/container/sops
 
-# psycopg
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends build-essential libpq-dev python3-dev \
-    && rm -rf /var/lib/apt/lists/*
+COPY --from=ghcr.io/astral-sh/uv:0.9-python3.13-trixie-slim /usr/local/bin/uv /usr/local/bin/uvx /usr/local/bin/
+# https://github.com/astral-sh/uv/pkgs/container/uv
 
-# sops
-#  - ghcr   | https://github.com/getsops/sops/pkgs/container/sops/versions
-#  - source | https://github.com/getsops/sops/blob/1c1b3c8787a9837bdeab616903e44666bae404d3/.release/Dockerfile
-FROM ghcr.io/getsops/sops:v3.10.2 AS sops
+COPY --from=mikefarah/yq:4 /usr/bin/yq /usr/local/bin/
+# https://github.com/mikefarah/yq/pkgs/container/yq
 
-# uv
-#  - docker hub | https://hub.docker.com/r/astral/uv
-#  - ghcr       | https://github.com/astral-sh/uv/pkgs/container/uv/versions
-#  - source     | https://github.com/astral-sh/uv/blob/9be016f3f8fdc3ac7974ed82762aa3364f6e8f2b/.github/workflows/build-docker.yml
-FROM ghcr.io/astral-sh/uv:0.9-python3.13-bookworm-slim AS uv
-
-# yq
-#  - docker hub | https://hub.docker.com/r/mikefarah/yq
-#  - ghcr       | https://github.com/mikefarah/yq/pkgs/container/yq
-#  - source     | https://github.com/mikefarah/yq/blob/7f72595a12fbc7bc2870804fd5e502a63a85bdbf/Dockerfile
-FROM mikefarah/yq:4 AS yq
-
-###############################################################################
-
-# final image
-FROM base
-
-# sops
-COPY --from=sops /usr/local/bin/sops /usr/local/bin/
-
-# uv
-COPY --from=uv /usr/local/bin/uv /usr/local/bin/
-COPY --from=uv /usr/local/bin/uvx /usr/local/bin/
-
-# yq
-COPY --from=yq /usr/bin/yq /usr/local/bin/
-
-# test
-RUN set -e; \
-    echo 'Checking binaries...'; \
-    for bin in dig gcc ip ld make nslookup pg_config ping; do \
-        if ! command -v "$bin" >/dev/null 2>&1; then \
-            echo "ERROR: '$bin' not found on PATH" >&2; exit 1; \
-        fi; \
-    done; \
-    for bin in age sops uv yq; do \
-        if ! "$bin" --help >/dev/null 2>&1; then \
-            echo "ERROR: '$bin --help' errored" >&2; exit 1; \
-        fi; \
-    done; \
-    echo 'Finished checking binaries'; \
-    sleep 2
-
+RUN echo '' \
+    && uv tool install bump-my-version \
+    && if ! age --help >/dev/null 2>&1; then echo "ERROR: 'age --help' failed" >&2; exit 1; fi \
+    && if ! bump-my-version --help >/dev/null 2>&1; then echo "ERROR: 'bump-my-version --help' failed" >&2; exit 1; fi \
+    && if ! curl --help >/dev/null 2>&1; then echo "ERROR: 'curl --help' failed" >&2; exit 1; fi \
+    && if ! docker --help >/dev/null 2>&1; then echo "ERROR: 'docker --help' failed" >&2; exit 1; fi \
+    && if ! docker buildx --help >/dev/null 2>&1; then echo "ERROR: 'docker buildx --help' failed" >&2; exit 1; fi \
+    && if ! docker compose --help >/dev/null 2>&1; then echo "ERROR: 'docker compose --help' failed" >&2; exit 1; fi \
+    && if ! git --help >/dev/null 2>&1; then echo "ERROR: 'git --help' failed" >&2; exit 1; fi \
+    && if ! sops --help >/dev/null 2>&1; then echo "ERROR: 'sops --help' failed" >&2; exit 1; fi \
+    && if ! yq --help >/dev/null 2>&1; then echo "ERROR: 'yq --help' failed" >&2; exit 1; fi \
+    && echo ''
 
 CMD ["/bin/sh"]
